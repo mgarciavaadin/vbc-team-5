@@ -99,6 +99,11 @@
 			<artifactId>service</artifactId>
 			<version>0.12.0</version>
 		</dependency>
+        <dependency>
+            <groupId>com.github.pravin-raha</groupId>
+            <artifactId>lexorank4j</artifactId>
+            <version>0.1.0</version>
+        </dependency>
     </dependencies>
 
     <build>

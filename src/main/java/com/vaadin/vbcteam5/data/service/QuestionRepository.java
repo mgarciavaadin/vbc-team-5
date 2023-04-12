@@ -11,7 +11,7 @@ import com.vaadin.vbcteam5.data.entity.Question;
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long>, JpaSpecificationExecutor<Question> {
 
-    List<Question> findAllByTownHall_Id(Long townHallId);
+    List<Question> findAllByTownHall_IdOrderByRank(Long townHallId);
 
     List<Question> findAllByTownHall_IdAndAuthor_Id(Long townHallId, Long authorId);
 

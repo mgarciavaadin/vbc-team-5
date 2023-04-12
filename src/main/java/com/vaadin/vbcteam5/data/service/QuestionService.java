@@ -16,7 +16,7 @@ public class QuestionService {
     }
 
     public List<Question> listByTownHall(long townHallId) {
-        return repository.findAllByTownHall_Id(townHallId);
+        return repository.findAllByTownHall_IdOrderByRank(townHallId);
     }
 
     public List<Question> listByTownHallAndUser(Long townHallId, Long userId) {

@@ -1,5 +1,6 @@
 package com.vaadin.vbcteam5.views.townhallmanagement;
 
+import com.github.pravin.raha.lexorank4j.LexoRank;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -8,6 +9,9 @@ import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.grid.dnd.GridDropLocation;
+import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -35,6 +39,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @PageTitle("Manage Town Halls")
 @Route(value = "manage-town-halls", layout = MainLayout.class)
@@ -48,6 +53,8 @@ public class TownHallManagementView extends VerticalLayout {
     private final Select<TownHall> selectTownHall;
     private final VerticalLayout townHallDetailsLayout;
     private final Grid<Question> questions;
+
+    private GridListDataView<Question> questionsDataView;
 
     public TownHallManagementView(TownHallService townHallService, QuestionService questionService) {
         this.townHallService = townHallService;
@@ -81,8 +88,6 @@ public class TownHallManagementView extends VerticalLayout {
             editTownHallDialog(selectTownHall.getValue());
         });
 
-
-
         questions = new Grid<>();
         questions.addColumn(createQuestionRenderer()).setHeader("Question").setSortable(true).setComparator(Question::isAnonymous);
         questions.addComponentColumn((question -> {
@@ -92,16 +97,77 @@ public class TownHallManagementView extends VerticalLayout {
         })).setHeader("Upvotes").setSortable(true).setComparator((Comparator.comparingInt(
             q -> q.getUpvotes().size())));
 
+        questions.setDropMode(GridDropMode.BETWEEN);
+        questions.setRowsDraggable(true);
+        AtomicReference<Question> draggedItemAtomic = new AtomicReference<>();
+        questions.addDragStartListener(e -> draggedItemAtomic.set(
+            e.getDraggedItems().get(0)));
+        questions.addDragEndListener(e -> draggedItemAtomic.set(null));
+        questions.addDropListener(e -> {
+            var draggedItem = draggedItemAtomic.get();
+            if (draggedItem == null) {
+                 return;
+            }
+            var dropLocation = e.getDropLocation();
+            var targetQuestion = e.getDropTargetItem().orElse(null);
+            var questionWasDroppedOntoItself = draggedItem.equals(targetQuestion);
 
+            if (targetQuestion == null || questionWasDroppedOntoItself) {
+                return;
+            }
+
+            questionsDataView.removeItem(draggedItem);
+            var newRank = new AtomicReference<LexoRank>();
+            if (dropLocation == GridDropLocation.BELOW) {
+                // We need to get the rank of the next item (if present)
+                var itemAfterTargetQuestion = questionsDataView.getNextItem(targetQuestion);
+                itemAfterTargetQuestion.ifPresentOrElse(nextItem -> {
+                    // Calculating the rank between the target question and the next one
+                    newRank.set(LexoRank.parse(targetQuestion.getRank()).between(LexoRank.parse(nextItem.getRank())));
+                }, () -> {
+                    // If there's no question after the target one, generate next rank
+                    newRank.set(LexoRank.parse(targetQuestion.getRank()).genNext());
+                });
+                questionsDataView.addItemAfter(draggedItem, targetQuestion);
+            } else {
+                // If drop location is above, we need to get the previous item (if present)
+                var itemBeforeTargetQuestion = questionsDataView.getPreviousItem(targetQuestion);
+                itemBeforeTargetQuestion.ifPresentOrElse(n -> {
+                    // Calculating the rank between the previous question and the target one
+                    newRank.set(LexoRank.parse(n.getRank()).between(LexoRank.parse(targetQuestion.getRank())));
+                }, () -> {
+                    // If there's no previous question, then we need to check if the target rank is the minimum value possible
+                    var previousRank = LexoRank.parse(targetQuestion.getRank());
+                    if (previousRank.isMin()) {
+                        // If that's the case, we give the minimum rank to the dragged question,
+                        // and calculate the new rank for the target one
+                        newRank.set(previousRank);
+                        var newRankForTarget = new AtomicReference<LexoRank>();
+                        questionsDataView.getNextItem(targetQuestion).ifPresentOrElse(nextItem ->  {
+                            // If there's a question after the target one, get the rank value between the minimum
+                            // and the next one and assign to the target question
+                            newRankForTarget.set(previousRank.between(LexoRank.parse(nextItem.getRank())));
+                        }, () -> {
+                            // If there's no question, then generate the next rank and assign it
+                            newRankForTarget.set(previousRank.genNext());
+                        });
+                        targetQuestion.setRank(newRankForTarget.get().toString());
+                        questionService.update(targetQuestion);
+                    } else {
+                        // If target question's rank is not the minimum, get the previous rank
+                        newRank.set(LexoRank.parse(targetQuestion.getRank()).genPrev());
+                    }
+                });
+                questionsDataView.addItemBefore(draggedItem, targetQuestion);
+            }
+            draggedItem.setRank(newRank.toString());
+            questionService.update(draggedItem);
+        });
 
         townHallDetailsLayout = new VerticalLayout(townHallDetails, editTownHall, questions);
         townHallDetailsLayout.setPadding(false);
 
-
-//        setMargin(true);
-
         refreshTownHalls();
-
 
         layout.add(selectTownHall, createTownHall);
         add(layout, new Hr());
@@ -241,6 +307,6 @@ public class TownHallManagementView extends VerticalLayout {
         selectedTownHallCloseDate.setValue(townHall.getCloseDate().format(
             DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
 
-        questions.setItems(questionService.listByTownHall(townHall.getId()));
+        questionsDataView = questions.setItems(questionService.listByTownHall(townHall.getId()));
     }
 }

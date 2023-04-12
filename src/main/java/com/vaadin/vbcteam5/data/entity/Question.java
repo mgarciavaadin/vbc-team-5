@@ -17,6 +17,8 @@ public class Question extends AbstractEntity {
 
     private boolean anonymous = true;
 
+    private String rank = "";
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User author;
@@ -83,5 +85,13 @@ public class Question extends AbstractEntity {
 
     public void setUpvotes(Set<User> upvotes) {
         this.upvotes = upvotes;
+    }
+
+    public String getRank() {
+        return rank;
+    }
+
+    public void setRank(String rank) {
+        this.rank = rank;
     }
 }
