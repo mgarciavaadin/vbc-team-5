@@ -104,5 +104,5 @@ insert into application_user (version, id, username,name,hashed_password,profile
 insert into user_roles (user_id, roles) values ('2', 'USER')
 insert into user_roles (user_id, roles) values ('2', 'ADMIN')
 insert into town_hall (version, id, `name`, close_date) values (1, 1, 'Vaadin Connected 2022', '2022-06-06 12:00:00')
-insert into question (version, id, `text`, anonymous, user_id, town_hall_id) values (1, 1, true, 'Sample question #1', 1, 1)
-insert into question (version, id, `text`, anonymous, user_id, town_hall_id) values (1, 2, false, 'Sample question #2', 1, 1)
+insert into question (version, id, `text`, anonymous, user_id, town_hall_id) values (1, 1, 'Sample question #1', true, 1, 1)
+insert into question (version, id, `text`, anonymous, user_id, town_hall_id) values (1, 2, 'Sample question #2', false, 1, 1)
