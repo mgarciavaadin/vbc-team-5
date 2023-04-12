@@ -22,7 +22,7 @@ import com.vaadin.vbcteam5.components.appnav.AppNavItem;
 import com.vaadin.vbcteam5.data.entity.User;
 import com.vaadin.vbcteam5.security.AuthenticatedUser;
 import com.vaadin.vbcteam5.views.about.AboutView;
-import com.vaadin.vbcteam5.views.helloworld.HelloWorldView;
+import com.vaadin.vbcteam5.views.townhallmanagement.TownHallManagementView;
 import com.vaadin.vbcteam5.views.masterdetail.MasterDetailView;
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -72,8 +72,8 @@ public class MainLayout extends AppLayout {
         // For documentation, visit https://github.com/vaadin/vcf-nav#readme
         AppNav nav = new AppNav();
 
-        if (accessChecker.hasAccess(HelloWorldView.class)) {
-            nav.addItem(new AppNavItem("Hello World", HelloWorldView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        if (accessChecker.hasAccess(TownHallManagementView.class)) {
+            nav.addItem(new AppNavItem("Manage Town Halls", TownHallManagementView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         }
         if (accessChecker.hasAccess(AboutView.class)) {
