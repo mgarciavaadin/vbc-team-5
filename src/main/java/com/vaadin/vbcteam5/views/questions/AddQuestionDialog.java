@@ -1,7 +1,5 @@
-package com.vaadin.vbcteam5.views.about;
+package com.vaadin.vbcteam5.views.questions;
 
-import com.vaadin.flow.component.AbstractField;
-import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;

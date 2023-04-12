@@ -21,7 +21,7 @@ import com.vaadin.vbcteam5.components.appnav.AppNav;
 import com.vaadin.vbcteam5.components.appnav.AppNavItem;
 import com.vaadin.vbcteam5.data.entity.User;
 import com.vaadin.vbcteam5.security.AuthenticatedUser;
-import com.vaadin.vbcteam5.views.about.AboutView;
+import com.vaadin.vbcteam5.views.questions.QuestionsView;
 import com.vaadin.vbcteam5.views.townhallmanagement.TownHallManagementView;
 import com.vaadin.vbcteam5.views.masterdetail.MasterDetailView;
 import com.vaadin.vbcteam5.views.testia.TestModerationView;
@@ -78,13 +78,8 @@ public class MainLayout extends AppLayout {
             nav.addItem(new AppNavItem("Manage Town Halls", TownHallManagementView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         }
-        if (accessChecker.hasAccess(AboutView.class)) {
-            nav.addItem(new AppNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
-
-        }
-        if (accessChecker.hasAccess(MasterDetailView.class)) {
-            nav.addItem(
-                    new AppNavItem("Master-Detail", MasterDetailView.class, LineAwesomeIcon.COLUMNS_SOLID.create()));
+        if (accessChecker.hasAccess(QuestionsView.class)) {
+            nav.addItem(new AppNavItem("Questions", QuestionsView.class, LineAwesomeIcon.QUESTION_CIRCLE.create()));
 
         }
 

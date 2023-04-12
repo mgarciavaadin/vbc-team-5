@@ -1,4 +1,4 @@
-package com.vaadin.vbcteam5.views.about;
+package com.vaadin.vbcteam5.views.questions;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,11 +25,11 @@ import com.vaadin.vbcteam5.data.service.TownHallService;
 import com.vaadin.vbcteam5.security.AuthenticatedUser;
 import com.vaadin.vbcteam5.views.MainLayout;
 
-@PageTitle("About")
-@Route(value = "about", layout = MainLayout.class)
+@PageTitle("Questions")
+@Route(value = "questions", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
 @AnonymousAllowed
-public class AboutView extends VerticalLayout {
+public class QuestionsView extends VerticalLayout {
 
     private Select<TownHall> townHallSelector;
     private AddQuestionDialog addQuestionDialog;
@@ -45,7 +45,7 @@ public class AboutView extends VerticalLayout {
 
     private final TownHallService townHallService;
 
-    public AboutView(AuthenticatedUser authenticatedUser, QuestionService questionService, TownHallService townHallService) {
+    public QuestionsView(AuthenticatedUser authenticatedUser, QuestionService questionService, TownHallService townHallService) {
         this.authenticatedUser = authenticatedUser;
         this.questionService = questionService;
         this.townHallService = townHallService;
