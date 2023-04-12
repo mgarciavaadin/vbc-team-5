@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -24,7 +25,7 @@ public class Question extends AbstractEntity {
     @JoinColumn(name = "town_hall_id")
     private TownHall townHall;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "question_upvotes")
     private Set<User> upvotes = new HashSet<>();
 

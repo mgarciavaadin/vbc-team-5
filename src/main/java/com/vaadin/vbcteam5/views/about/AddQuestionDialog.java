@@ -1,5 +1,7 @@
 package com.vaadin.vbcteam5.views.about;
 
+import com.vaadin.flow.component.AbstractField;
+import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -8,6 +10,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.vbcteam5.data.entity.Question;
 import com.vaadin.vbcteam5.data.entity.TownHall;
 import com.vaadin.vbcteam5.data.entity.User;
@@ -20,18 +24,24 @@ public class AddQuestionDialog extends Dialog {
     private final Avatar avatar;
     private final TextField postingAs;
     private final Checkbox postAnonymously;
+    private TownHall townHall;
 
-    public AddQuestionDialog(AuthenticatedUser authenticatedUser, QuestionService questionService, final TownHall townHall) {
+    public AddQuestionDialog(AuthenticatedUser authenticatedUser, QuestionService questionService) {
         User currentUser = authenticatedUser.get().get();
 
         setHeaderTitle("Add question");
 
         text = new TextArea("Your question");
-        text.setRequired(true);
-        text.setRequiredIndicatorVisible(false);
         text.setMinWidth("440px");
         text.setMinHeight("120px");
         add(text);
+        text.setValueChangeMode(ValueChangeMode.EAGER);
+
+        // binder
+        Binder<Question> binder = new Binder<>(Question.class);
+        binder.forField(text)
+                .asRequired("This field is required.")
+                .bind(Question::getText, Question::setText);
 
         // lower layout
         avatar = new Avatar(currentUser.getName());
@@ -49,17 +59,34 @@ public class AddQuestionDialog extends Dialog {
         add(postLayout);
 
         // buttons
-        Button cancelButton = new Button("Cancel", e -> close());
+        Button cancelButton = new Button("Cancel", e -> {
+            close();
+            text.clear();
+            postAnonymously.setValue(false);
+        });
         Button saveButton = new Button("Create", e -> {
-            Question question = new Question(text.getValue(), currentUser, townHall, postAnonymously.getValue());
+            Question question = new Question(text.getValue(), currentUser, this.townHall, postAnonymously.getValue());
             questionService.update(question);
             close();
+            text.clear();
+            postAnonymously.setValue(false);
         });
         saveButton.addThemeName("primary");
         saveButton.setEnabled(false);
-        text.addValueChangeListener(event -> saveButton.setEnabled(!text.getValue().isBlank()));
+
+        text.addValueChangeListener(event -> {
+            boolean invalid = event.getValue().isBlank();
+            saveButton.setEnabled(!invalid);
+        });
 
         getFooter().add(cancelButton, saveButton);
     }
 
+    public TownHall getTownHall() {
+        return townHall;
+    }
+
+    public void setTownHall(TownHall townHall) {
+        this.townHall = townHall;
+    }
 }
