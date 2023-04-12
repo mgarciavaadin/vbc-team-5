@@ -24,6 +24,8 @@ import com.vaadin.vbcteam5.security.AuthenticatedUser;
 import com.vaadin.vbcteam5.views.about.AboutView;
 import com.vaadin.vbcteam5.views.helloworld.HelloWorldView;
 import com.vaadin.vbcteam5.views.masterdetail.MasterDetailView;
+import com.vaadin.vbcteam5.views.testia.TestModerationView;
+
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import org.vaadin.lineawesome.LineAwesomeIcon;
@@ -33,109 +35,112 @@ import org.vaadin.lineawesome.LineAwesomeIcon;
  */
 public class MainLayout extends AppLayout {
 
-    private H2 viewTitle;
+	private H2 viewTitle;
 
-    private AuthenticatedUser authenticatedUser;
-    private AccessAnnotationChecker accessChecker;
+	private AuthenticatedUser authenticatedUser;
+	private AccessAnnotationChecker accessChecker;
 
-    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
-        this.authenticatedUser = authenticatedUser;
-        this.accessChecker = accessChecker;
+	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
+		this.authenticatedUser = authenticatedUser;
+		this.accessChecker = accessChecker;
 
-        setPrimarySection(Section.DRAWER);
-        addDrawerContent();
-        addHeaderContent();
-    }
+		setPrimarySection(Section.DRAWER);
+		addDrawerContent();
+		addHeaderContent();
+	}
 
-    private void addHeaderContent() {
-        DrawerToggle toggle = new DrawerToggle();
-        toggle.getElement().setAttribute("aria-label", "Menu toggle");
+	private void addHeaderContent() {
+		DrawerToggle toggle = new DrawerToggle();
+		toggle.getElement().setAttribute("aria-label", "Menu toggle");
 
-        viewTitle = new H2();
-        viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+		viewTitle = new H2();
+		viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        addToNavbar(true, toggle, viewTitle);
-    }
+		addToNavbar(true, toggle, viewTitle);
+	}
 
-    private void addDrawerContent() {
-        H1 appName = new H1("Vaadin Builder Challenge Team 5");
-        appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
-        Header header = new Header(appName);
+	private void addDrawerContent() {
+		H1 appName = new H1("Vaadin Builder Challenge Team 5");
+		appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+		Header header = new Header(appName);
 
-        Scroller scroller = new Scroller(createNavigation());
+		Scroller scroller = new Scroller(createNavigation());
 
-        addToDrawer(header, scroller, createFooter());
-    }
+		addToDrawer(header, scroller, createFooter());
+	}
 
-    private AppNav createNavigation() {
-        // AppNav is not yet an official component.
-        // For documentation, visit https://github.com/vaadin/vcf-nav#readme
-        AppNav nav = new AppNav();
+	private AppNav createNavigation() {
+		// AppNav is not yet an official component.
+		// For documentation, visit https://github.com/vaadin/vcf-nav#readme
+		AppNav nav = new AppNav();
 
-        if (accessChecker.hasAccess(HelloWorldView.class)) {
-            nav.addItem(new AppNavItem("Hello World", HelloWorldView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+		if (accessChecker.hasAccess(HelloWorldView.class)) {
+			nav.addItem(new AppNavItem("Hello World", HelloWorldView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
-        }
-        if (accessChecker.hasAccess(AboutView.class)) {
-            nav.addItem(new AppNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
+		}
+		if (accessChecker.hasAccess(AboutView.class)) {
+			nav.addItem(new AppNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
 
-        }
-        if (accessChecker.hasAccess(MasterDetailView.class)) {
-            nav.addItem(
-                    new AppNavItem("Master-Detail", MasterDetailView.class, LineAwesomeIcon.COLUMNS_SOLID.create()));
+		}
+		if (accessChecker.hasAccess(MasterDetailView.class)) {
+			nav.addItem(
+					new AppNavItem("Master-Detail", MasterDetailView.class, LineAwesomeIcon.COLUMNS_SOLID.create()));
 
-        }
+		}
 
-        return nav;
-    }
+		if (accessChecker.hasAccess(TestModerationView.class)) {
+			nav.addItem(new AppNavItem("Test Moderation", TestModerationView.class, LineAwesomeIcon.SAD_CRY.create()));
+		}
+		return nav;
+	}
 
-    private Footer createFooter() {
-        Footer layout = new Footer();
+	private Footer createFooter() {
+		Footer layout = new Footer();
 
-        Optional<User> maybeUser = authenticatedUser.get();
-        if (maybeUser.isPresent()) {
-            User user = maybeUser.get();
+		Optional<User> maybeUser = authenticatedUser.get();
+		if (maybeUser.isPresent()) {
+			User user = maybeUser.get();
 
-            Avatar avatar = new Avatar(user.getName());
-            StreamResource resource = new StreamResource("profile-pic",
-                    () -> new ByteArrayInputStream(user.getProfilePicture()));
-            avatar.setImageResource(resource);
-            avatar.setThemeName("xsmall");
-            avatar.getElement().setAttribute("tabindex", "-1");
+			Avatar avatar = new Avatar(user.getName());
+			StreamResource resource = new StreamResource("profile-pic",
+					() -> new ByteArrayInputStream(user.getProfilePicture()));
+			avatar.setImageResource(resource);
+			avatar.setThemeName("xsmall");
+			avatar.getElement().setAttribute("tabindex", "-1");
 
-            MenuBar userMenu = new MenuBar();
-            userMenu.setThemeName("tertiary-inline contrast");
+			MenuBar userMenu = new MenuBar();
+			userMenu.setThemeName("tertiary-inline contrast");
 
-            MenuItem userName = userMenu.addItem("");
-            Div div = new Div();
-            div.add(avatar);
-            div.add(user.getName());
-            div.add(new Icon("lumo", "dropdown"));
-            div.getElement().getStyle().set("display", "flex");
-            div.getElement().getStyle().set("align-items", "center");
-            div.getElement().getStyle().set("gap", "var(--lumo-space-s)");
-            userName.add(div);
-            userName.getSubMenu().addItem("Sign out", e -> {
-                authenticatedUser.logout();
-            });
+			MenuItem userName = userMenu.addItem("");
+			Div div = new Div();
+			div.add(avatar);
+			div.add(user.getName());
+			div.add(new Icon("lumo", "dropdown"));
+			div.getElement().getStyle().set("display", "flex");
+			div.getElement().getStyle().set("align-items", "center");
+			div.getElement().getStyle().set("gap", "var(--lumo-space-s)");
+			userName.add(div);
+			userName.getSubMenu().addItem("Sign out", e -> {
+				authenticatedUser.logout();
+			});
 
-            layout.add(userMenu);
-        } else {
-            Anchor loginLink = new Anchor("login", "Sign in");
-            layout.add(loginLink);
-        }
+			layout.add(userMenu);
+		} else {
+			Anchor loginLink = new Anchor("login", "Sign in");
+			layout.add(loginLink);
+		}
 
-        return layout;
-    }
+		return layout;
+	}
 
-    @Override
-    protected void afterNavigation() {
-        super.afterNavigation();
-        viewTitle.setText(getCurrentPageTitle());
-    }
+	@Override
+	protected void afterNavigation() {
+		super.afterNavigation();
+		viewTitle.setText(getCurrentPageTitle());
+	}
 
-    private String getCurrentPageTitle() {
-        PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
-        return title == null ? "" : title.value();
-    }
+	private String getCurrentPageTitle() {
+		PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
+		return title == null ? "" : title.value();
+	}
 }
