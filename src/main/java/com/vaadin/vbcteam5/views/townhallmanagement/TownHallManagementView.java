@@ -141,13 +141,4 @@ public class TownHallManagementView extends VerticalLayout {
             DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
 
     }
-
-    private List<TownHall> createTownHallList() {
-        return List.of(
-            new TownHall("Town hall June/23", LocalDateTime.of(2023, 6, 12, 12, 0)),
-            new TownHall("Town hall May/23", LocalDateTime.of(2023, 5, 23, 12, 0)),
-            new TownHall("Town hall Jan/23", LocalDateTime.of(2023, 1, 29, 12, 0)),
-            new TownHall("Town hall Sep/22", LocalDateTime.of(2022, 9, 17, 12, 0))
-        );
-    }
 }
