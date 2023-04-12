@@ -14,6 +14,8 @@ public class Question extends AbstractEntity {
 
     private String text;
 
+    private boolean anonymous = true;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User author;
@@ -35,12 +37,27 @@ public class Question extends AbstractEntity {
         this.townHall = townHall;
     }
 
+    public Question(String text, User author, TownHall townHall, boolean anonymous) {
+        this.text = text;
+        this.anonymous = anonymous;
+        this.author = author;
+        this.townHall = townHall;
+    }
+
     public String getText() {
         return text;
     }
 
     public void setText(String value) {
         this.text = value;
+    }
+
+    public boolean isAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 
     public TownHall getTownHall() {
