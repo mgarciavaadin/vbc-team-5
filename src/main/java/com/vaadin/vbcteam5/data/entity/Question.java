@@ -1,7 +1,12 @@
 package com.vaadin.vbcteam5.data.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
 @Entity
@@ -17,7 +22,9 @@ public class Question extends AbstractEntity {
     @JoinColumn(name = "town_hall_id")
     private TownHall townHall;
 
-    // TODO missing upvotes
+    @ManyToMany
+    @JoinTable(name = "question_upvotes")
+    private Set<User> upvotes = new HashSet<>();
 
     public Question() {
     }
@@ -50,5 +57,13 @@ public class Question extends AbstractEntity {
 
     public void setAuthor(User author) {
         this.author = author;
+    }
+
+    public Set<User> getUpvotes() {
+        return upvotes;
+    }
+
+    public void setUpvotes(Set<User> upvotes) {
+        this.upvotes = upvotes;
     }
 }
