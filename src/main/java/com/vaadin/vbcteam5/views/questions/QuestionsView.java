@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import jakarta.annotation.security.PermitAll;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -13,6 +15,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.webcomponent.EventOptions;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
@@ -28,7 +31,7 @@ import com.vaadin.vbcteam5.views.MainLayout;
 @PageTitle("Questions")
 @Route(value = "questions", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
-@AnonymousAllowed
+@PermitAll
 public class QuestionsView extends VerticalLayout {
 
     private Select<TownHall> townHallSelector;
@@ -98,7 +101,9 @@ public class QuestionsView extends VerticalLayout {
         questionsGrid.addColumn(Question::getText).setHeader("Question");
         questionsGrid.addComponentColumn(userQuestion -> {
             Span numOfVotes = new Span(userQuestion.getUpvotes().size() + "");
+            boolean townHallClosed = townHallSelector.getValue().getCloseDate().isBefore(LocalDateTime.now());
             numOfVotes.getElement().getThemeList().add("badge primary pill");
+            // check if current user is the question's author
             if (userQuestion.getAuthor().equals(currentUser)) {
                 Button deleteButton = new Button(VaadinIcon.TRASH.create(), e -> {
                     this.questionService.delete(userQuestion.getId());
@@ -108,7 +113,6 @@ public class QuestionsView extends VerticalLayout {
                 deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
                 // TODO show confirmation dialog
                 HorizontalLayout buttonsLayout = new HorizontalLayout(numOfVotes);
-                boolean townHallClosed = townHallSelector.getValue().getCloseDate().isBefore(LocalDateTime.now());
                 if (!townHallClosed) {
                     buttonsLayout.add(deleteButton);
                 }
@@ -116,13 +120,20 @@ public class QuestionsView extends VerticalLayout {
             }
             boolean userVoted = userQuestion.getUpvotes().contains(currentUser);
 
-            Button voteButton = new Button("",
-                    new Icon(userVoted ? VaadinIcon.THUMBS_DOWN : VaadinIcon.THUMBS_UP));
+            Button voteButton = new Button("", VaadinIcon.THUMBS_UP.create());
+            if (userVoted) {
+                voteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            } else {
+                voteButton.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            }
             voteButton.addClickListener(e -> {
-                voteButton.setIcon(new Icon(userVoted ? VaadinIcon.THUMBS_UP : VaadinIcon.THUMBS_DOWN));
                 voteForTheQuestion(userQuestion);
             });
-            return new HorizontalLayout(voteButton, numOfVotes);
+            HorizontalLayout votesLayout = new HorizontalLayout(numOfVotes);
+            if (!townHallClosed) {
+                votesLayout.add(voteButton);
+            }
+            return votesLayout;
         });
         questions = this.questionService.listByTownHall(townHallSelector.getValue().getId());
         questionsGrid.setItems(questions);
