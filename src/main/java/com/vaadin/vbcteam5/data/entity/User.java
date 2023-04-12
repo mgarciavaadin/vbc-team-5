@@ -9,7 +9,10 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -26,6 +29,9 @@ public class User extends AbstractEntity {
     @Lob
     @Column(length = 1000000)
     private byte[] profilePicture;
+
+    @ManyToMany(mappedBy = "upvotes")
+    private Set<Question> upvotedQuestions = new HashSet<>();
 
     public String getUsername() {
         return username;
@@ -58,4 +64,11 @@ public class User extends AbstractEntity {
         this.profilePicture = profilePicture;
     }
 
+    public Set<Question> getUpvotedQuestions() {
+        return upvotedQuestions;
+    }
+
+    public void setUpvotedQuestions(Set<Question> upvotedQuestions) {
+        this.upvotedQuestions = upvotedQuestions;
+    }
 }
