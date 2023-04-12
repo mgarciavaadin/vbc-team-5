@@ -4,12 +4,16 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.vbcteam5.ai.ModerationResponse;
+import com.vaadin.vbcteam5.ai.ModerationService;
 import com.vaadin.vbcteam5.data.entity.Question;
 import com.vaadin.vbcteam5.data.entity.TownHall;
 import com.vaadin.vbcteam5.data.entity.User;
@@ -64,6 +68,15 @@ public class AddQuestionDialog extends Dialog {
         });
         Button saveButton = new Button("Create", e -> {
             Question question = new Question(text.getValue(), currentUser, this.townHall, postAnonymously.getValue());
+            ModerationResponse moderation = ModerationService.moderateQuestion(question.getText());
+			text.setInvalid(moderation.isFlagged());
+
+			if (moderation.isFlagged())
+			{
+				Notification.show(moderation.getExplanation(), 3000, Position.MIDDLE);
+				return;
+			}
+			
             questionService.update(question);
             close();
             text.clear();

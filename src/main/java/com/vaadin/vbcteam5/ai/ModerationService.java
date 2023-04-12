@@ -12,6 +12,7 @@ public class ModerationService {
 	public static ModerationResponse moderateQuestion(String input) {
 		OpenAiService service = new OpenAiService(APIKEY);
 
+		try {
 		ModerationRequest moderationRequest = ModerationRequest.builder().input(input).build();
 
 		ModerationResult moderationResult = service.createModeration(moderationRequest);
@@ -34,5 +35,10 @@ public class ModerationService {
 		service.shutdownExecutor();
 
 		return result;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return  ModerationResponse.createAcceptedExplanation();
+		}
 	}
 }
