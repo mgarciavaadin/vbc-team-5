@@ -27,7 +27,7 @@ public class TestModerationView extends HorizontalLayout {
 		submit.addClickListener(e -> {
 			ModerationResponse moderation = ModerationService.moderateQuestion(question.getValue());
 
-			question.setInvalid(!moderation.isFlagged());
+			question.setInvalid(moderation.isFlagged());
 			result.setText(moderation.getExplanation());
 		});
 		submit.addClickShortcut(Key.ENTER);
