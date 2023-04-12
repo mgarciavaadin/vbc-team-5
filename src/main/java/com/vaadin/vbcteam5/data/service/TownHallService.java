@@ -24,4 +24,7 @@ public class TownHallService {
         return repository.save(townHall);
     }
 
+    public void delete(TownHall townHall) {
+        repository.delete(townHall);
+    }
 }

@@ -1,43 +1,57 @@
 package com.vaadin.vbcteam5.views.townhallmanagement;
 
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Hr;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.vbcteam5.data.entity.Question;
 import com.vaadin.vbcteam5.data.entity.TownHall;
+import com.vaadin.vbcteam5.data.service.QuestionService;
 import com.vaadin.vbcteam5.data.service.TownHallService;
 import com.vaadin.vbcteam5.views.MainLayout;
+import jakarta.annotation.security.RolesAllowed;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Comparator;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @PageTitle("Manage Town Halls")
 @Route(value = "manage-town-halls", layout = MainLayout.class)
-@AnonymousAllowed
+@RolesAllowed("ADMIN")
 public class TownHallManagementView extends VerticalLayout {
 
     private final TownHallService townHallService;
-    private Button createTownHall;
-    private TextField selectedTownHallName;
-    private TextField selectedTownHallCloseDate;
-    private Select<TownHall> selectTownHall;
+    private final QuestionService questionService;
+    private final TextField selectedTownHallName;
+    private final TextField selectedTownHallCloseDate;
+    private final Select<TownHall> selectTownHall;
+    private final VerticalLayout townHallDetailsLayout;
+    private final Grid<Question> questions;
 
-    public TownHallManagementView(TownHallService townHallService) {
+    public TownHallManagementView(TownHallService townHallService, QuestionService questionService) {
         this.townHallService = townHallService;
+        this.questionService = questionService;
         HorizontalLayout layout = new HorizontalLayout();
         layout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 
@@ -49,7 +63,8 @@ public class TownHallManagementView extends VerticalLayout {
             showTownHallDetails(event.getValue());
         });
 
-        createTownHall = new Button("Create Town Hall", new Icon(VaadinIcon.PLUS));
+        Button createTownHall = new Button("Create Town Hall",
+            new Icon(VaadinIcon.PLUS));
         createTownHall.addClickListener(e -> {
             editTownHallDialog(null);
         });
@@ -65,21 +80,46 @@ public class TownHallManagementView extends VerticalLayout {
         var editTownHall = new Button("Edit", e -> {
             editTownHallDialog(selectTownHall.getValue());
         });
-        var townHallDetailsLayout = new VerticalLayout(townHallDetails, editTownHall);
 
-        setMargin(true);
 
-        fillSelectTownHall();
-        townHallDetailsLayout.setVisible(selectTownHall.getValue() != null);
+
+        questions = new Grid<>();
+        questions.addColumn(createQuestionRenderer()).setHeader("Question").setSortable(true).setComparator(Question::isAnonymous);
+        questions.addComponentColumn((question -> {
+            var upvotes = new Span(new Text(String.valueOf(question.getUpvotes().size())));
+            upvotes.getElement().getThemeList().add("badge");
+            return upvotes;
+        })).setHeader("Upvotes").setSortable(true).setComparator((Comparator.comparingInt(
+            q -> q.getUpvotes().size())));
+
+
+
+        townHallDetailsLayout = new VerticalLayout(townHallDetails, editTownHall, questions);
+        townHallDetailsLayout.setPadding(false);
+
+
+//        setMargin(true);
+
+        refreshTownHalls();
 
 
         layout.add(selectTownHall, createTownHall);
-        add(layout);
+        add(layout, new Hr());
         add(townHallDetailsLayout);
     }
 
-    private void fillSelectTownHall() {
-        var townHalls = getTownHallsInDescendentOrder(townHallService);
+    private static Renderer<Question> createQuestionRenderer() {
+        return LitRenderer.<Question>of("<vaadin-vertical-layout>"
+            + "<span style='font-style: italic; font-size: 0.8rem; color: var(--lumo-secondary-text-color);'>${item.anonymous ? item.name : 'Anonymous'}</span>"
+            + "<span>${item.question}</span>"
+            + "</vaadin-vertical-layout>")
+                .withProperty("question", Question::getText)
+                .withProperty("name", (question -> question.getAuthor().getName()))
+                .withProperty("anonymous", Question::isAnonymous);
+    }
+
+    private void refreshTownHalls() {
+        var townHalls = townHallService.list();
 
         var futureTownHalls = townHalls.stream().filter(
                 townHall -> townHall.getCloseDate().isAfter(LocalDateTime.now()))
@@ -93,41 +133,102 @@ public class TownHallManagementView extends VerticalLayout {
         if (!townHalls.isEmpty()) {
             selectTownHall.setValue(townHalls.get(0));
         }
-    }
-
-    private static List<TownHall> getTownHallsInDescendentOrder(TownHallService townHallService) {
-        return townHallService.list().stream().sorted(
-                (tw1, tw2) -> tw2.getCloseDate().compareTo(tw1.getCloseDate()))
-            .toList();
+        townHallDetailsLayout.setVisible(selectTownHall.getValue() != null);
     }
 
     private void editTownHallDialog(TownHall townHall) {
         var dialog = new Dialog();
         dialog.setHeaderTitle(townHall == null ? "Create New Town Hall" : "Edit Town Hall");
+        var binder = new BeanValidationBinder<>(TownHall.class);
         var fields = new FormLayout();
         var nameField = new TextField("Name");
-        nameField.setRequired(true);
+        binder.forField(nameField).asRequired("Name is required").bind("name");
+        nameField.setValueChangeMode(ValueChangeMode.EAGER);
+
         var closeDateField = new DateTimePicker("Closing date");
-        closeDateField.setRequiredIndicatorVisible(true);
+        binder.forField(closeDateField).asRequired("Closing date is required").bind("closeDate");
+
+        AtomicBoolean formIsDirty = new AtomicBoolean(false);
+        dialog.addDialogCloseActionListener(e -> {
+            if (formIsDirty.get()) {
+                var exitEditingConfirmDialog = new ConfirmDialog();
+                exitEditingConfirmDialog.setHeader("Unsaved changes");
+                exitEditingConfirmDialog.setText("Do you want to discard your changes?");
+                exitEditingConfirmDialog.setCancelable(true);
+                exitEditingConfirmDialog.setCancelText("Discard");
+                exitEditingConfirmDialog.setCancelButtonTheme("tertiary error");
+                exitEditingConfirmDialog.addCancelListener(event -> dialog.close());
+                exitEditingConfirmDialog.setConfirmText("Continue editing");
+                exitEditingConfirmDialog.open();
+            } else {
+                dialog.close();
+            }
+
+        });
+
         fields.add(nameField, closeDateField);
         dialog.add(fields);
 
         var cancelButton = new Button("Cancel", e -> dialog.close());
         var saveButton = new Button("Save", e -> {
-            var townHallToSave = townHall != null ? townHall : new TownHall();
-            townHallToSave.setName(nameField.getValue());
-            townHallToSave.setCloseDate(closeDateField.getValue());
-            townHallService.save(townHallToSave);
-            fillSelectTownHall();
-            dialog.close();
+            if (binder.validate().isOk()) {
+                townHallService.save(binder.getBean());
+                refreshTownHalls();
+                dialog.close();
+            }
+        });
+        saveButton.setEnabled(false);
+        binder.setBean(townHall != null ? townHall : new TownHall());
+        saveButton.setThemeName("primary");
+
+        binder.addValueChangeListener(e -> {
+            formIsDirty.set(true);
+            saveButton.setEnabled(true);
         });
 
         if (townHall != null) {
-            nameField.setValue(townHall.getName());
-            closeDateField.setValue(townHall.getCloseDate());
+            var deleteButton = new Button("Delete", ev -> {
+                // confirm before delete
+                var confirmDeleteDialog = new ConfirmDialog();
+                confirmDeleteDialog.setHeader("Are you sure you want to delete this Town Hall?");
+                confirmDeleteDialog.setText("This action cannot be reverted.");
+                confirmDeleteDialog.setCancelable(true);
+                confirmDeleteDialog.setConfirmText("Delete");
+                confirmDeleteDialog.setConfirmButtonTheme("primary error");
+                confirmDeleteDialog.addConfirmListener(e -> {
+                    questionService.listByTownHall(townHall.getId()).forEach(question -> questionService.delete(question.getId()));
+                    townHallService.delete(townHall);
+                    refreshTownHalls();
+                    dialog.close();
+                    Notification.show(String.format("Town hall \"%s\" has been deleted.", townHall.getName()));
+                });
+                confirmDeleteDialog.open();
+
+            });
+            deleteButton.setThemeName("tertiary error");
+            deleteButton.getStyle().set("margin-inline-end", "auto");
+            dialog.getFooter().add(deleteButton);
+
+            var stopTownHallButton = new Button("Stop Town Hall", e -> {
+                var confirmStopTownHall = new ConfirmDialog();
+                confirmStopTownHall.setHeader("Are you sure you want to stop this Town Hall?");
+                confirmStopTownHall.setText("This will change the closing date to the current date and time.");
+                confirmStopTownHall.setCancelable(true);
+                confirmStopTownHall.setConfirmText("Stop");
+                confirmStopTownHall.setConfirmButtonTheme("primary");
+                confirmStopTownHall.addConfirmListener(ev -> {
+                    townHall.setCloseDate(LocalDateTime.now());
+                    townHallService.save(townHall);
+                    refreshTownHalls();
+                    dialog.close();
+                    Notification.show(String.format("Town hall \"%s\" has been stopped.", townHall.getName()));
+                });
+                confirmStopTownHall.open();
+            });
+            stopTownHallButton.setThemeName("tertiary");
+            dialog.getFooter().add(stopTownHallButton);
         }
 
-        saveButton.setThemeName("primary");
         dialog.getFooter().add(cancelButton, saveButton);
         dialog.open();
     }
@@ -140,5 +241,6 @@ public class TownHallManagementView extends VerticalLayout {
         selectedTownHallCloseDate.setValue(townHall.getCloseDate().format(
             DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
 
+        questions.setItems(questionService.listByTownHall(townHall.getId()));
     }
 }

@@ -26,7 +26,7 @@ public class Question extends AbstractEntity {
     private TownHall townHall;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "question_upvotes")
+    @JoinTable(name = "question_upvotes", joinColumns = { @JoinColumn(name = "question_id")}, inverseJoinColumns = {@JoinColumn(name = "user_id")})
     private Set<User> upvotes = new HashSet<>();
 
     public Question() {
