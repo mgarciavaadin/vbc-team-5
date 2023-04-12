@@ -1,17 +1,19 @@
 package com.vaadin.vbcteam5.views.townhallmanagement;
 
 import com.github.pravin.raha.lexorank4j.LexoRank;
-import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
+import com.vaadin.flow.component.html.DescriptionList;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -48,11 +50,10 @@ public class TownHallManagementView extends VerticalLayout {
 
     private final TownHallService townHallService;
     private final QuestionService questionService;
-    private final TextField selectedTownHallName;
-    private final TextField selectedTownHallCloseDate;
+    private final DescriptionList.Description townHallCloseDateValue;
     private final Select<TownHall> selectTownHall;
-    private final VerticalLayout townHallDetailsLayout;
-    private final Grid<Question> questions;
+    private final HorizontalLayout townHallDetailsLayout;
+    private final Grid<Question> questionsGrid;
 
     private GridListDataView<Question> questionsDataView;
 
@@ -65,6 +66,7 @@ public class TownHallManagementView extends VerticalLayout {
 
         selectTownHall = new Select<>();
         selectTownHall.setLabel("Select Town Hall");
+        selectTownHall.getStyle().set("width", "30ch");
         selectTownHall.setItemLabelGenerator((TownHall::getName));
         selectTownHall.addValueChangeListener(event -> {
             showTownHallDetails(event.getValue());
@@ -75,35 +77,40 @@ public class TownHallManagementView extends VerticalLayout {
         createTownHall.addClickListener(e -> {
             editTownHallDialog(null);
         });
-        createTownHall.addClickShortcut(Key.ENTER);
 
-        selectedTownHallName = new TextField("Name");
-        selectedTownHallName.setReadOnly(true);
-        selectedTownHallCloseDate = new TextField("Closing date");
-        selectedTownHallCloseDate.setReadOnly(true);
+        var townHallDetails = new DescriptionList();
+        townHallDetails.setClassName("town-hall-details");
 
-        var townHallDetails = new HorizontalLayout(selectedTownHallName,
-            selectedTownHallCloseDate);
-        var editTownHall = new Button("Edit", e -> {
+        var townHallCloseDateTitle = new DescriptionList.Term("Closing date");
+        townHallCloseDateValue = new DescriptionList.Description();
+
+        townHallDetails.add(
+            townHallCloseDateTitle,
+            townHallCloseDateValue
+        );
+
+        var editTownHall = new Button("Edit", new Icon(VaadinIcon.PENCIL), e -> {
             editTownHallDialog(selectTownHall.getValue());
         });
+        editTownHall.setThemeName("tertiary");
+        editTownHall.getStyle().set("margin-inline-start", "auto");
 
-        questions = new Grid<>();
-        questions.addColumn(createQuestionRenderer()).setHeader("Question").setSortable(true).setComparator(Question::isAnonymous);
-        questions.addComponentColumn((question -> {
+        questionsGrid = new Grid<>();
+        questionsGrid.addColumn(createQuestionRenderer()).setHeader("Question").setSortable(true).setComparator(Question::isAnonymous);
+        questionsGrid.addComponentColumn((question -> {
             var upvotes = new Span(new Text(String.valueOf(question.getUpvotes().size())));
             upvotes.getElement().getThemeList().add("badge");
             return upvotes;
         })).setHeader("Upvotes").setSortable(true).setComparator((Comparator.comparingInt(
-            q -> q.getUpvotes().size())));
+            q -> q.getUpvotes().size()))).setTextAlign(ColumnTextAlign.END);
 
-        questions.setDropMode(GridDropMode.BETWEEN);
-        questions.setRowsDraggable(true);
+        questionsGrid.setDropMode(GridDropMode.BETWEEN);
+        questionsGrid.setRowsDraggable(true);
         AtomicReference<Question> draggedItemAtomic = new AtomicReference<>();
-        questions.addDragStartListener(e -> draggedItemAtomic.set(
+        questionsGrid.addDragStartListener(e -> draggedItemAtomic.set(
             e.getDraggedItems().get(0)));
-        questions.addDragEndListener(e -> draggedItemAtomic.set(null));
-        questions.addDropListener(e -> {
+        questionsGrid.addDragEndListener(e -> draggedItemAtomic.set(null));
+        questionsGrid.addDropListener(e -> {
             var draggedItem = draggedItemAtomic.get();
             if (draggedItem == null) {
                  return;
@@ -164,14 +171,21 @@ public class TownHallManagementView extends VerticalLayout {
             questionService.update(draggedItem);
         });
 
-        townHallDetailsLayout = new VerticalLayout(townHallDetails, editTownHall, questions);
+        townHallDetailsLayout = new HorizontalLayout(townHallDetails, editTownHall);
+        townHallDetailsLayout.getStyle().set("display", "contents");
         townHallDetailsLayout.setPadding(false);
 
         refreshTownHalls();
+        Div separator = new Div();
+        separator.setClassName("separator");
 
-        layout.add(selectTownHall, createTownHall);
-        add(layout, new Hr());
-        add(townHallDetailsLayout);
+        layout.add(selectTownHall, townHallDetailsLayout, separator, createTownHall);
+        layout.setWidthFull();
+        layout.addClassName("town-hall-toolbar");
+        layout.setPadding(true);
+        add(layout);
+        add(this.questionsGrid);
+        setSpacing(false);
     }
 
     private static Renderer<Question> createQuestionRenderer() {
@@ -200,6 +214,7 @@ public class TownHallManagementView extends VerticalLayout {
             selectTownHall.setValue(townHalls.get(0));
         }
         townHallDetailsLayout.setVisible(selectTownHall.getValue() != null);
+        questionsGrid.setVisible(selectTownHall.getValue() != null);
     }
 
     private void editTownHallDialog(TownHall townHall) {
@@ -303,10 +318,9 @@ public class TownHallManagementView extends VerticalLayout {
         if (townHall == null) {
             return;
         }
-        selectedTownHallName.setValue(townHall.getName());
-        selectedTownHallCloseDate.setValue(townHall.getCloseDate().format(
-            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
 
-        questionsDataView = questions.setItems(questionService.listByTownHall(townHall.getId()));
+        townHallCloseDateValue.setText(townHall.getCloseDate().format(
+            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)));
+        questionsDataView = questionsGrid.setItems(questionService.listByTownHall(townHall.getId()));
     }
 }
