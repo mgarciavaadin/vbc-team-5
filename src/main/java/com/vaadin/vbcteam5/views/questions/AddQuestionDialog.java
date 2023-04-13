@@ -67,7 +67,7 @@ public class AddQuestionDialog extends Dialog {
             postAnonymously.setValue(false);
         });
         Button saveButton = new Button("Create", e -> {
-            Question question = new Question(text.getValue(), currentUser, this.townHall, postAnonymously.getValue());
+            Question question = new Question(text.getValue(), currentUser, this.townHall, !postAnonymously.getValue());
             ModerationResponse moderation = ModerationService.moderateQuestion(question.getText());
 			text.setInvalid(moderation.isFlagged());
 

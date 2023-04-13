@@ -189,8 +189,8 @@ public class TownHallManagementView extends VerticalLayout {
     }
 
     private static Renderer<Question> createQuestionRenderer() {
-        return LitRenderer.<Question>of("<vaadin-vertical-layout>"
-            + "<span style='font-style: italic; font-size: 0.8rem; color: var(--lumo-secondary-text-color);'>${item.anonymous ? item.name : 'Anonymous'}</span>"
+        return LitRenderer.<Question>of("<vaadin-vertical-layout style='padding-block: var(--lumo-space-s);'>"
+            + "<span style='font-style: italic; font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);'>${item.anonymous ? item.name : 'Anonymous'}</span>"
             + "<span>${item.question}</span>"
             + "</vaadin-vertical-layout>")
                 .withProperty("question", Question::getText)
@@ -319,8 +319,7 @@ public class TownHallManagementView extends VerticalLayout {
             return;
         }
 
-        townHallCloseDateValue.setText(townHall.getCloseDate().format(
-            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)));
+        townHallCloseDateValue.setText(townHall.getCloseDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         questionsDataView = questionsGrid.setItems(questionService.listByTownHall(townHall.getId()));
     }
 }

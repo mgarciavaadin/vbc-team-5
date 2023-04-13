@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import jakarta.annotation.security.PermitAll;
 
 import com.vaadin.flow.component.button.Button;
@@ -59,11 +61,11 @@ public class QuestionsView extends VerticalLayout {
         // Select town hall to operate with
         townHallSelector = new Select<>();
         townHallSelector.setLabel("Select Town Hall");
+        townHallSelector.setWidth("40ch");
         List<TownHall> townHalls = this.townHallService.list();
         townHallSelector.setItems(townHalls);
         townHallSelector.setValue(townHalls.get(0));
         townHallSelector.setItemLabelGenerator(th -> th.getName() + " | " + th.getCloseDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-        add(townHallSelector);
 
         // Post a question
         addQuestionDialog = new AddQuestionDialog(authenticatedUser, questionService);
@@ -72,8 +74,7 @@ public class QuestionsView extends VerticalLayout {
                 refreshQuestions();
             }
         });
-        add(addQuestionDialog);
-        showAddQuestionDialog = new Button("Add question", e -> {
+        showAddQuestionDialog = new Button("Add question", new Icon(VaadinIcon.PLUS), e -> {
             addQuestionDialog.setTownHall(townHallSelector.getValue());
             addQuestionDialog.open();
         });
@@ -92,17 +93,16 @@ public class QuestionsView extends VerticalLayout {
         showAddQuestionDialog.setEnabled(!isTownHallClosed);
         townHallClosedMessage.setVisible(isTownHallClosed);
 
-        HorizontalLayout questionDialogLayout = new HorizontalLayout(showAddQuestionDialog, townHallClosedMessage);
-        questionDialogLayout.setAlignItems(Alignment.CENTER);
+        HorizontalLayout questionDialogLayout = new HorizontalLayout(townHallSelector, showAddQuestionDialog, townHallClosedMessage);
+        questionDialogLayout.setAlignItems(Alignment.BASELINE);
         add(questionDialogLayout);
 
-        questionsGrid.addColumn(q -> q.isAnonymous() ? "Anonymous" : q.getAuthor().getName())
-                .setHeader("Name");
-        questionsGrid.addColumn(Question::getText).setHeader("Question");
+        questionsGrid.addColumn(createQuestionRenderer()).setHeader("Question").setAutoWidth(true);
         questionsGrid.addComponentColumn(userQuestion -> {
-            Span numOfVotes = new Span(userQuestion.getUpvotes().size() + "");
+            int upvotes = userQuestion.getUpvotes().size();
+            Span numOfVotes = new Span(String.format("%d %s", upvotes, upvotes == 1 ? "upvote" : "upvotes"));
             boolean townHallClosed = townHallSelector.getValue().getCloseDate().isBefore(LocalDateTime.now());
-            numOfVotes.getElement().getThemeList().add("badge primary pill");
+            numOfVotes.getElement().getThemeList().add("badge");
             // check if current user is the question's author
             if (userQuestion.getAuthor().equals(currentUser)) {
                 Button deleteButton = new Button(VaadinIcon.TRASH.create(), e -> {
@@ -110,9 +110,10 @@ public class QuestionsView extends VerticalLayout {
                     refreshQuestions();
                 });
                 deleteButton.getElement().setAttribute("aria-label", "Remove question: " + userQuestion.getText());
-                deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+                deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
                 // TODO show confirmation dialog
                 HorizontalLayout buttonsLayout = new HorizontalLayout(numOfVotes);
+                buttonsLayout.setJustifyContentMode(JustifyContentMode.END);
                 if (!townHallClosed) {
                     buttonsLayout.add(deleteButton);
                 }
@@ -130,6 +131,7 @@ public class QuestionsView extends VerticalLayout {
                 voteForTheQuestion(userQuestion);
             });
             HorizontalLayout votesLayout = new HorizontalLayout(numOfVotes);
+            votesLayout.setJustifyContentMode(JustifyContentMode.END);
             if (!townHallClosed) {
                 votesLayout.add(voteButton);
             }
@@ -146,6 +148,16 @@ public class QuestionsView extends VerticalLayout {
         // Pre-defined styling
         setSpacing(false);
         setSizeFull();
+    }
+
+    private static Renderer<Question> createQuestionRenderer() {
+        return LitRenderer.<Question>of("<vaadin-vertical-layout style='padding-block: var(--lumo-space-s);'>"
+                + "<span style='font-style: italic; font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);'>${item.anonymous ? item.name : 'Anonymous'}</span>"
+                + "<span>${item.question}</span>"
+                + "</vaadin-vertical-layout>")
+            .withProperty("question", Question::getText)
+            .withProperty("name", (question -> question.getAuthor().getName()))
+            .withProperty("anonymous", Question::isAnonymous);
     }
 
     private void refreshQuestions() {
