@@ -152,7 +152,7 @@ public class QuestionsView extends VerticalLayout {
 
     private static Renderer<Question> createQuestionRenderer() {
         return LitRenderer.<Question>of("<vaadin-vertical-layout style='padding-block: var(--lumo-space-s);'>"
-                + "<span style='font-style: italic; font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);'>${item.anonymous ? item.name : 'Anonymous'}</span>"
+                + "<span style='font-style: italic; font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);'>${item.anonymous ? 'Anonymous' : item.name }</span>"
                 + "<span>${item.question}</span>"
                 + "</vaadin-vertical-layout>")
             .withProperty("question", Question::getText)
