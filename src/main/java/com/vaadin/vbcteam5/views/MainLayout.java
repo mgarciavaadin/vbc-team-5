@@ -23,7 +23,6 @@ import com.vaadin.vbcteam5.data.entity.User;
 import com.vaadin.vbcteam5.security.AuthenticatedUser;
 import com.vaadin.vbcteam5.views.questions.QuestionsView;
 import com.vaadin.vbcteam5.views.townhallmanagement.TownHallManagementView;
-import com.vaadin.vbcteam5.views.masterdetail.MasterDetailView;
 import com.vaadin.vbcteam5.views.testia.TestModerationView;
 
 import java.io.ByteArrayInputStream;
@@ -75,7 +74,7 @@ public class MainLayout extends AppLayout {
         AppNav nav = new AppNav();
 
         if (accessChecker.hasAccess(TownHallManagementView.class)) {
-            nav.addItem(new AppNavItem("Manage Town Halls", TownHallManagementView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+            nav.addItem(new AppNavItem("Manage Town Halls", TownHallManagementView.class, LineAwesomeIcon.CALENDAR_CHECK.create()));
 
         }
         if (accessChecker.hasAccess(QuestionsView.class)) {

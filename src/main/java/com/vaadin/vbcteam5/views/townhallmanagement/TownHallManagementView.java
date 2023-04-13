@@ -16,8 +16,6 @@ import com.vaadin.flow.component.html.DescriptionList;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -35,10 +33,10 @@ import com.vaadin.vbcteam5.data.service.QuestionService;
 import com.vaadin.vbcteam5.data.service.TownHallService;
 import com.vaadin.vbcteam5.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import org.vaadin.lineawesome.LineAwesomeIcon;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,7 +71,7 @@ public class TownHallManagementView extends VerticalLayout {
         });
 
         Button createTownHall = new Button("Create Town Hall",
-            new Icon(VaadinIcon.PLUS));
+           LineAwesomeIcon.PLUS_SOLID.create());
         createTownHall.addClickListener(e -> {
             editTownHallDialog(null);
         });
@@ -89,7 +87,7 @@ public class TownHallManagementView extends VerticalLayout {
             townHallCloseDateValue
         );
 
-        var editTownHall = new Button("Edit", new Icon(VaadinIcon.PENCIL), e -> {
+        var editTownHall = new Button("Edit", LineAwesomeIcon.PENCIL_ALT_SOLID.create(), e -> {
             editTownHallDialog(selectTownHall.getValue());
         });
         editTownHall.setThemeName("tertiary");

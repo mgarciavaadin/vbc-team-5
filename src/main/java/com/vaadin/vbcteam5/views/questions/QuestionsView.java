@@ -14,16 +14,12 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.webcomponent.EventOptions;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
-import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.vbcteam5.data.entity.Question;
 import com.vaadin.vbcteam5.data.entity.TownHall;
 import com.vaadin.vbcteam5.data.entity.User;
@@ -31,6 +27,7 @@ import com.vaadin.vbcteam5.data.service.QuestionService;
 import com.vaadin.vbcteam5.data.service.TownHallService;
 import com.vaadin.vbcteam5.security.AuthenticatedUser;
 import com.vaadin.vbcteam5.views.MainLayout;
+import org.vaadin.lineawesome.LineAwesomeIcon;
 
 @PageTitle("Questions")
 @Route(value = "questions", layout = MainLayout.class)
@@ -76,7 +73,7 @@ public class QuestionsView extends VerticalLayout {
                 refreshQuestions();
             }
         });
-        showAddQuestionDialog = new Button("Add question", new Icon(VaadinIcon.PLUS), e -> {
+        showAddQuestionDialog = new Button("Add question", LineAwesomeIcon.PLUS_SOLID.create(), e -> {
             addQuestionDialog.setTownHall(townHallSelector.getValue());
             addQuestionDialog.open();
         });
@@ -107,7 +104,7 @@ public class QuestionsView extends VerticalLayout {
             numOfVotes.getElement().getThemeList().add("badge");
             // check if current user is the question's author
             if (userQuestion.getAuthor().equals(currentUser)) {
-                Button deleteButton = new Button(VaadinIcon.TRASH.create(), e -> {
+                Button deleteButton = new Button(LineAwesomeIcon.TRASH_ALT.create(), e -> {
                     ConfirmDialog confirmDialog = new ConfirmDialog();
                     confirmDialog.setHeader("Confirm");
                     confirmDialog.setText(new Html(String.format("<p>Are you sure want to delete this question?<br /><span class=\"font-bold\">%s<span></p>", userQuestion.getText())));
@@ -131,7 +128,7 @@ public class QuestionsView extends VerticalLayout {
             }
             boolean userVoted = userQuestion.getUpvotes().contains(currentUser);
 
-            Button voteButton = new Button("", VaadinIcon.THUMBS_UP.create());
+            Button voteButton = new Button("", LineAwesomeIcon.THUMBS_UP.create());
             if (userVoted) {
                 voteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
             } else {
