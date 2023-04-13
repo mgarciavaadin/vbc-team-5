@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import jakarta.annotation.security.PermitAll;
@@ -106,12 +108,20 @@ public class QuestionsView extends VerticalLayout {
             // check if current user is the question's author
             if (userQuestion.getAuthor().equals(currentUser)) {
                 Button deleteButton = new Button(VaadinIcon.TRASH.create(), e -> {
-                    this.questionService.delete(userQuestion.getId());
-                    refreshQuestions();
+                    ConfirmDialog confirmDialog = new ConfirmDialog();
+                    confirmDialog.setHeader("Confirm");
+                    confirmDialog.setText(new Html(String.format("<p>Are you sure want to delete this question?<br /><span class=\"font-bold\">%s<span></p>", userQuestion.getText())));
+                    confirmDialog.addConfirmListener(confirmEvent -> {
+                        this.questionService.delete(userQuestion.getId());
+                        refreshQuestions();
+                    });
+                    confirmDialog.setCancelable(true);
+                    confirmDialog.setConfirmText("Delete");
+                    confirmDialog.setConfirmButtonTheme("primary error");
+                    confirmDialog.open();
                 });
                 deleteButton.getElement().setAttribute("aria-label", "Remove question: " + userQuestion.getText());
                 deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
-                // TODO show confirmation dialog
                 HorizontalLayout buttonsLayout = new HorizontalLayout(numOfVotes);
                 buttonsLayout.setJustifyContentMode(JustifyContentMode.END);
                 if (!townHallClosed) {
