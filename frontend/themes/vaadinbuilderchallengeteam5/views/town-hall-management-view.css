@@ -1,0 +1,31 @@
+.town-hall-toolbar {
+    width: 100%;
+    align-items: baseline;
+    background-color: var(--lumo-contrast-5pct);
+    padding-block: 0;
+    border: 1px solid var(--lumo-contrast-20pct);
+    border-block-end: 0;
+}
+
+.separator {
+    width: 1px;
+    align-self: stretch;
+    background-color: var(--lumo-contrast-20pct);
+}
+
+.town-hall-details {
+    margin: 0;
+    align-self: end;
+}
+
+.town-hall-details dt{
+    color: var(--lumo-secondary-text-color);
+    font-weight: 500;
+    font-size: var(--lumo-font-size-s);
+}
+
+.town-hall-details dd {
+    margin-inline-start: 0;
+    padding-block: 0.5em;
+    letter-spacing: 0.02em;
+}
