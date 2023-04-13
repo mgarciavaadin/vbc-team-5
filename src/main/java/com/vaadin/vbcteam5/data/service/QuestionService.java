@@ -2,6 +2,7 @@ package com.vaadin.vbcteam5.data.service;
 
 import java.util.List;
 
+import com.github.pravin.raha.lexorank4j.LexoRank;
 import org.springframework.stereotype.Service;
 
 import com.vaadin.vbcteam5.data.entity.Question;
@@ -24,6 +25,15 @@ public class QuestionService {
     }
 
     public Question update(Question question) {
+        if (question.getId() == null) {
+            Question lastRankedQuestion = repository.findFirstByTownHall_IdOrderByRankDesc(
+                question.getTownHall().getId());
+            LexoRank rank = LexoRank.min();
+            if (lastRankedQuestion != null) {
+                rank = LexoRank.parse((lastRankedQuestion.getRank())).genNext();
+            }
+            question.setRank(rank.toString());
+        }
         return repository.save(question);
     }
 

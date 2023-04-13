@@ -15,4 +15,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long>, JpaSp
 
     List<Question> findAllByTownHall_IdAndAuthor_Id(Long townHallId, Long authorId);
 
+    Question findFirstByTownHall_IdOrderByRankDesc(Long townHallId);
+
 }
